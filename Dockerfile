@@ -6,11 +6,13 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip && echo "cache-bust-1"
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip && echo "cache-bust-2"
 
-# Fix Apache MPM conflict and enable mod_rewrite
-RUN a2dismod mpm_event mpm_worker 2>/dev/null || true \
-    && a2enmod mpm_prefork rewrite
+# Fix Apache MPM conflict - disable ALL MPMs first, then enable only prefork
+RUN a2dismod mpm_event mpm_worker mpm_prefork 2>/dev/null || true \
+    && a2enmod mpm_prefork \
+    && a2enmod rewrite \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Set Apache document root to /public
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
