@@ -3,7 +3,7 @@ set -e
 
 cd /var/www/html
 
-# Generate APP_KEY if not provided
+# Generate APP_KEY first if not provided
 if [ -z "$APP_KEY" ]; then
     APP_KEY=$(php artisan key:generate --show --no-interaction)
 fi
@@ -36,15 +36,14 @@ EOF
 echo "Running migrations..."
 php artisan migrate --force --no-interaction
 
-# Seed only if DB is empty (first deploy)
+# Seed only if DB is empty
 php artisan db:seed --force --no-interaction 2>/dev/null || true
 
-# Clear & cache config
+# Cache config
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
 echo "✅ Big Small Game ready!"
 
-# Start Apache
 exec "$@"
