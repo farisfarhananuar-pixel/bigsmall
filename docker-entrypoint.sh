@@ -1,11 +1,18 @@
 #!/bin/bash
 set -e
 
-# Write .env from environment variables (Railway injects these)
+cd /var/www/html
+
+# Generate APP_KEY if not provided
+if [ -z "$APP_KEY" ]; then
+    APP_KEY=$(php artisan key:generate --show --no-interaction)
+fi
+
+# Write .env from environment variables
 cat > /var/www/html/.env << EOF
 APP_NAME="Big Small Game"
 APP_ENV=${APP_ENV:-production}
-APP_KEY=${APP_KEY:-}
+APP_KEY=${APP_KEY}
 APP_DEBUG=${APP_DEBUG:-false}
 APP_URL=${APP_URL:-http://localhost}
 
@@ -24,13 +31,6 @@ SESSION_LIFETIME=120
 CACHE_STORE=file
 QUEUE_CONNECTION=sync
 EOF
-
-cd /var/www/html
-
-# Generate APP_KEY if not set
-if [ -z "$APP_KEY" ]; then
-    php artisan key:generate --no-interaction
-fi
 
 # Run migrations
 echo "Running migrations..."
