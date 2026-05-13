@@ -1,17 +1,19 @@
 FROM php:8.3-apache
 
+# Force cache invalidation
+ARG CACHE_BUST=4
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     git curl libpng-dev libonig-dev libxml2-dev libzip-dev zip unzip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip && echo "cache-bust-2"
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
 
-# Fix Apache MPM conflict - disable ALL MPMs first, then enable only prefork
+# Fix Apache MPM - disable all, enable only prefork
 RUN a2dismod mpm_event mpm_worker mpm_prefork 2>/dev/null || true \
-    && a2enmod mpm_prefork \
-    && a2enmod rewrite \
+    && a2enmod mpm_prefork rewrite \
     && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 # Set Apache document root to /public
@@ -23,22 +25,17 @@ RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy project files
 COPY . .
 
-# Fix permissions BEFORE composer install
 RUN mkdir -p bootstrap/cache storage/framework/sessions storage/framework/views storage/framework/cache/data storage/logs \
     && chmod -R 777 bootstrap/cache storage \
     && chown -R www-data:www-data bootstrap/cache storage
 
-# Install Laravel dependencies
 ENV COMPOSER_ALLOW_SUPERUSER=1
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-scripts
 
-# Copy entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 

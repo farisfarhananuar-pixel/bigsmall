@@ -4,16 +4,16 @@ namespace Database\Seeders;
 
 use App\Models\GameRound;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Carbon;
 
 class GameRoundSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create 100 historical rounds for demo data
-        $types = ['big', 'small'];
-        $bigNums = [5, 6, 7, 8, 9];
-        $smallNums = [0, 1, 2, 3, 4];
+        // Skip if data already exists
+        if (GameRound::count() > 0) {
+            $this->command->info('GameRound data already exists, skipping seeder.');
+            return;
+        }
 
         for ($i = 100; $i >= 1; $i--) {
             $num = rand(0, 9);
@@ -29,7 +29,6 @@ class GameRoundSeeder extends Seeder
             ]);
         }
 
-        // Create current open round
         GameRound::create([
             'period' => now()->format('Ymd') . '100' . str_pad(101, 6, '0', STR_PAD_LEFT),
             'is_open' => true,
