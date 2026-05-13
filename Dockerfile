@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip
+RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip && echo "cache-bust-1"
 
 # Fix Apache MPM conflict and enable mod_rewrite
 RUN a2dismod mpm_event mpm_worker 2>/dev/null || true \
